@@ -15,8 +15,14 @@
  */
 package io.codeprimate.examples.redis.embedded.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import java.io.File;
+import java.util.Optional;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.util.Assert;
+
+import lombok.AccessLevel;
+import lombok.Getter;
 import redis.embedded.RedisServer;
 
 /**
@@ -29,12 +35,55 @@ import redis.embedded.RedisServer;
  */
 @ConfigurationProperties("redis.server")
 @SuppressWarnings("unused")
-public record EmbeddedRedisServerProperties(String exe, Integer port) {
+public record EmbeddedRedisServerProperties(File exec, Integer port) {
 
 	public static int REDIS_PORT = EmbeddedRedisServerConfiguration.REDIS_PORT;
 
-	public int resolvePort() {
-		Integer port = port();
-		return port != null ? port : REDIS_PORT;
+	public static EmbeddedRedisServerProperties.Builder copy(EmbeddedRedisServerProperties properties) {
+		Assert.notNull(properties, "Properties to copy is required");
+		return new Builder(properties);
+	}
+
+	public EmbeddedRedisServerProperties {
+		boolean isValidExec = exec == null || exec.isFile();
+		Assert.isTrue(isValidExec, () -> "Executable [%s] for Redis server not found".formatted(exec));
+	}
+
+	public Optional<File> optionalExec() {
+		return Optional.ofNullable(exec());
+	}
+
+	public Optional<Integer> optionalPort() {
+		return Optional.ofNullable(port());
+	}
+
+	public int portOrDefault() {
+		return optionalPort().orElse(REDIS_PORT);
+	}
+
+	@Getter(AccessLevel.PROTECTED)
+	public static class Builder {
+
+		private File executable;
+		private Integer port;
+
+		protected Builder(EmbeddedRedisServerProperties properties) {
+			this.executable = properties.exec();
+			this.port = properties.port();
+		}
+
+		public Builder usingExecutable(File executable) {
+			this.executable = executable;
+			return this;
+		}
+
+		public Builder usingPort(Integer port) {
+			this.port = port;
+			return this;
+		}
+
+		public EmbeddedRedisServerProperties build() {
+			return new EmbeddedRedisServerProperties(getExecutable(), getPort());
+		}
 	}
 }
