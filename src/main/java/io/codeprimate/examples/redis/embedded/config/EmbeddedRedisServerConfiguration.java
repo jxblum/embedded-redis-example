@@ -18,7 +18,9 @@ package io.codeprimate.examples.redis.embedded.config;
 import io.codeprimate.examples.redis.embedded.config.support.AbstractImportAwareSupport;
 import io.codeprimate.examples.redis.embedded.connection.EmbeddedRedisServerConnectionFactory;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.AnnotationAttributes;
@@ -38,17 +40,19 @@ import redis.embedded.RedisServer;
  * @since 0.1.0
  */
 @Configuration
+@EnableConfigurationProperties(EmbeddedRedisServerProperties.class)
 @SuppressWarnings("unused")
 public class EmbeddedRedisServerConfiguration extends AbstractImportAwareSupport<EnableEmbeddedRedisServer> {
 
 	protected static final int REDIS_PORT = EmbeddedRedisServerConnectionFactory.DEFAULT_REDIS_PORT;
 
-	protected static final String SPRING_DATA_REDIS_PORT_PROPERTY = "spring.data.redis.port";
-
 	private int redisPort = REDIS_PORT;
 
-	@Value("${"+SPRING_DATA_REDIS_PORT_PROPERTY+":"+REDIS_PORT+"}")
-	private Integer configuredRedisPort;
+	@Autowired
+	private EmbeddedRedisServerProperties embeddedRedisProperties;
+
+	@Autowired
+	private RedisProperties redisProperties;
 
 	@Override
 	public void setImportMetadata(@NonNull AnnotationMetadata importMetadata) {
@@ -60,7 +64,9 @@ public class EmbeddedRedisServerConfiguration extends AbstractImportAwareSupport
 	}
 
 	protected int getRedisPort(AnnotationAttributes enableEmbeddedRedisServerAttributes) {
-		return this.configuredRedisPort != null ? this.configuredRedisPort
+
+		return this.redisProperties.getPort() != REDIS_PORT ? this.redisProperties.getPort()
+			: this.embeddedRedisProperties.port() != null ? this.embeddedRedisProperties.port()
 			: enableEmbeddedRedisServerAttributes.getNumber("port");
 	}
 
