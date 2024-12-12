@@ -72,7 +72,12 @@ public class EmbeddedRedisServerConfiguration extends AbstractImportAwareSupport
 
 	@Bean
 	EmbeddedRedisServerFactoryBean embeddedRedisServer() {
-		return new EmbeddedRedisServerFactoryBean(this.redisPort);
+
+		EmbeddedRedisServerProperties properties = EmbeddedRedisServerProperties.copy(this.embeddedRedisProperties)
+			.usingPort(this.redisPort)
+			.build();
+
+		return new EmbeddedRedisServerFactoryBean(properties);
 	}
 
 	@Bean

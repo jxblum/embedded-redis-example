@@ -23,7 +23,11 @@ import io.codeprimate.examples.redis.embedded.support.AbstractServerSupport;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.context.SmartLifecycle;
 
+import redis.embedded.RedisExecProvider;
 import redis.embedded.RedisServer;
+import redis.embedded.util.Architecture;
+import redis.embedded.util.OS;
+import redis.embedded.util.OSDetector;
 
 /**
  * Spring {@link FactoryBean} for the embedded {@link RedisServer}.
@@ -43,13 +47,29 @@ public class EmbeddedRedisServerFactoryBean extends AbstractServerSupport
 
 	private final RedisServer redisServer;
 
-	public EmbeddedRedisServerFactoryBean(int port) {
+	public EmbeddedRedisServerFactoryBean(EmbeddedRedisServerProperties properties) {
 
-		int resolvedPort = resolvePort(port);
+		int resolvedPort = resolvePort(properties.port());
 
 		this.redisServer = RedisServer.builder()
+			.redisExecProvider(newRedisExecProvider(properties))
 			.port(resolvedPort)
 			.build();
+	}
+
+	private RedisExecProvider newRedisExecProvider(EmbeddedRedisServerProperties properties) {
+		RedisExecProvider redisExecProvider = RedisExecProvider.defaultProvider();
+		properties.optionalExec().ifPresent(executable ->
+			redisExecProvider.override(resolveOs(), resolveArchitecture(), executable.getAbsolutePath()));
+		return redisExecProvider;
+	}
+
+	private OS resolveOs() {
+		return OSDetector.getOS();
+	}
+
+	private Architecture resolveArchitecture() {
+		return OSDetector.getArchitecture();
 	}
 
 	@Override
