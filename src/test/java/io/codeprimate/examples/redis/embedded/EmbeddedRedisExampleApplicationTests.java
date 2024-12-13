@@ -17,6 +17,7 @@ package io.codeprimate.examples.redis.embedded;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,12 +25,30 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
+import redis.embedded.RedisServer;
+
 @SpringBootTest
 @SuppressWarnings("unused")
 class EmbeddedRedisExampleApplicationTests {
 
 	@Autowired
+	private RedisServer redisServer;
+
+	@Autowired
 	private RedisTemplate<String, Object> embeddedRedisTemplate;
+
+	@BeforeEach
+	@SuppressWarnings("all")
+	public void assertRedisServerRunning() {
+
+		assertThat(this.redisServer).isNotNull();
+		assertThat(this.redisServer.isActive()).isTrue();
+		assertThat(this.embeddedRedisTemplate).isNotNull();
+
+		if (this.embeddedRedisTemplate.hasKey("TestKey")) {
+			assertThat(this.embeddedRedisTemplate.delete("TestKey")).isTrue();
+		}
+	}
 
 	@Test
 	void embeddedRedisGetAndSetSuccessfully() {
