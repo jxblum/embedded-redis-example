@@ -15,6 +15,7 @@
  */
 package io.codeprimate.examples.redis.embedded.config;
 
+import java.io.IOException;
 import java.util.Optional;
 
 import io.codeprimate.examples.redis.embedded.connection.EmbeddedRedisServerConnectionFactory;
@@ -40,21 +41,43 @@ import redis.embedded.util.OSDetector;
  * @see redis.embedded.RedisServer
  * @since 0.1.0
  */
+@SuppressWarnings("unused")
 public class EmbeddedRedisServerFactoryBean extends AbstractServerSupport
 		implements FactoryBean<RedisServer>, SmartLifecycle {
 
 	private static final int REDIS_PORT = EmbeddedRedisServerConnectionFactory.DEFAULT_REDIS_PORT;
 
+	private static final String REDIS_READY_PATTERN = ".*Ready to accept connections tcp.*";
+
 	private final RedisServer redisServer;
 
 	public EmbeddedRedisServerFactoryBean(EmbeddedRedisServerProperties properties) {
-
 		int resolvedPort = resolvePort(properties.port());
+		this.redisServer = newRedisServer(properties, resolvedPort);
+	}
 
-		this.redisServer = RedisServer.builder()
+	private RedisServer buildRedisServer(EmbeddedRedisServerProperties properties, int port) {
+
+		return RedisServer.builder()
 			.redisExecProvider(newRedisExecProvider(properties))
-			.port(resolvedPort)
+			.port(port)
 			.build();
+	}
+
+	private RedisServer newRedisServer(EmbeddedRedisServerProperties properties, int port) {
+
+		try {
+			return new RedisServer(newRedisExecProvider(properties), port) {
+
+				@Override
+				protected String redisReadyPattern() {
+					return REDIS_READY_PATTERN;
+				}
+			};
+		}
+		catch (IOException e) {
+			throw new RuntimeException("Failed to start Redis server on port [%d]".formatted(port), e);
+		}
 	}
 
 	private RedisExecProvider newRedisExecProvider(EmbeddedRedisServerProperties properties) {
