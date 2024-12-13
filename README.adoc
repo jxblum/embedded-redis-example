@@ -75,12 +75,12 @@ with a `RedisTemplate` connected to the embedded Redis server.
 == NOTES
 
 The https://github.com/kstyrc/embedded-redis[embedded-redis] is a misnomer because the project does not technically
-"embed" a running Redis server in your JVM application (e.g. Java or Kotlin) process. It simply forks a Redis server
+"embed" a running Redis server in your JVM (e.g. Java or Kotlin) application process. It simply forks a Redis server
 process.
 
-Fortunately, with the use of Spring and tying the Redis server lifecycle to the Spring application using Spring container
-lifecycle hooks (e.g. `SmartLifecycle` beans), the external Redis server functions like an embedded server, starting
-the Redis server when the application starts and stopping the server when the application shuts down.
+Fortunately, with the use of Spring and tying the Redis server to the Spring application lifecycle using Spring container
+lifecycle hooks (e.g. `SmartLifecycle` beans; see https://github.com/jxblum/embedded-redis-example/blob/main/src/main/java/io/codeprimate/examples/redis/embedded/config/EmbeddedRedisServerFactoryBean.java#L43-L44[here]), the external Redis server functions like an embedded server, starting the Redis server
+when the application starts and stopping the server when the application shuts down.
 
 Still, I recommend users avoid this project and use the https://testcontainers.com/modules/redis/[Redis Testcontainer]
 instead. Spring Boot provides comprehensive https://docs.spring.io/spring-boot/reference/testing/testcontainers.html[support for Testcontainers].
