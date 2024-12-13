@@ -74,7 +74,7 @@ public class EmbeddedRedisServerFactoryBean extends AbstractServerSupport
 			};
 		}
 		catch (IOException e) {
-			throw new RuntimeException("Failed to start Redis server on port [%d]".formatted(port), e);
+			throw new RuntimeException("Failed to construct a new Redis server on port [%d]".formatted(port), e);
 		}
 	}
 
