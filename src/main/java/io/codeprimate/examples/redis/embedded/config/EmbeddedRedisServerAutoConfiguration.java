@@ -25,6 +25,7 @@ import redis.embedded.RedisServer;
  * Spring Boot {@link AutoConfiguration} for the embedded {@link RedisServer}.
  *
  * @author John Blum
+ * @see io.codeprimate.examples.redis.embedded.config.EmbeddedRedisServerConfiguration
  * @see io.codeprimate.examples.redis.embedded.config.EnableEmbeddedRedisServer
  * @see org.springframework.boot.autoconfigure.AutoConfiguration
  * @see redis.embedded.RedisServer
