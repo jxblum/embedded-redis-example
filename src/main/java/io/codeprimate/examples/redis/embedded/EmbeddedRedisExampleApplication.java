@@ -15,13 +15,10 @@
  */
 package io.codeprimate.examples.redis.embedded;
 
-import io.codeprimate.examples.redis.embedded.config.EnableEmbeddedRedisServer;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-@EnableEmbeddedRedisServer
 @SuppressWarnings("unused")
 public class EmbeddedRedisExampleApplication {
 
