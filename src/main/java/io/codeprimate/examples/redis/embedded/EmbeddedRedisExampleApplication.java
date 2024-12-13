@@ -26,7 +26,6 @@ import org.springframework.context.annotation.FilterType;
 @SpringBootApplication(exclude = { EmbeddedRedisServerAutoConfiguration.class })
 @ComponentScan(excludeFilters =
 	@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = EmbeddedRedisServerConfiguration.class))
-@SuppressWarnings("unused")
 public class EmbeddedRedisExampleApplication {
 
 	public static void main(String[] args) {
