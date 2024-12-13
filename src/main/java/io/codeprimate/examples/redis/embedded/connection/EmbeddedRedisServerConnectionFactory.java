@@ -16,12 +16,15 @@
 package io.codeprimate.examples.redis.embedded.connection;
 
 import java.util.List;
+import java.util.function.BiFunction;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.connection.RedisClusterConnection;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisSentinelConnection;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.util.Assert;
 
@@ -45,6 +48,8 @@ public class EmbeddedRedisServerConnectionFactory implements RedisConnectionFact
 
 	public static final int DEFAULT_REDIS_PORT = 6379;
 
+	private static final RedisClient CONFIGURED_REDIS_CLIENT = RedisClient.LETTUCE;
+
 	public static final String LOCALHOST = "localhost";
 	public static final String EMBEDDED_REDIS_HOST = LOCALHOST;
 
@@ -57,6 +62,11 @@ public class EmbeddedRedisServerConnectionFactory implements RedisConnectionFact
 		return new EmbeddedRedisServerConnectionFactory(redisServer);
 	}
 
+	private final BiFunction<String, Integer, RedisConnectionFactory> newRedisConnectionFactoryFunction = (host, port) ->
+		CONFIGURED_REDIS_CLIENT.equals(RedisClient.LETTUCE)
+			? newLettuceConnectionFactory(host, port)
+			: newJedisConnectionFactory(host, port);
+
 	private final RedisConnectionFactory redisConnectionFactory;
 
 	private final RedisServer redisServer;
@@ -68,17 +78,31 @@ public class EmbeddedRedisServerConnectionFactory implements RedisConnectionFact
 
 	// When overridding, becareful not to let the 'this' reference escape!
 	protected RedisConnectionFactory newRedisConnectionFactory(RedisServer redisServer) {
+
 		String host = resolveHost(redisServer);
 		int port = resolvePort(redisServer);
-		return new LettuceConnectionFactory(host, port);
+
+		return this.newRedisConnectionFactoryFunction.apply(host, port);
 	}
 
-	// When overridding, becareful not to let the 'this' reference escape!
+	protected JedisConnectionFactory newJedisConnectionFactory(String host, int port) {
+		RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration(host, port);
+		//JedisConnectionFactory connectionFactory = new JedisConnectionFactory(configuration);
+		//connectionFactory.start();
+		//return connectionFactory;
+		return null;
+	}
+
+	protected LettuceConnectionFactory newLettuceConnectionFactory(String host, int port) {
+		LettuceConnectionFactory connectionFactory = new LettuceConnectionFactory(host, port);
+		connectionFactory.start();
+		return connectionFactory;
+	}
+
 	protected String resolveHost(RedisServer redisServer) {
 		return EMBEDDED_REDIS_HOST;
 	}
 
-	// When overridding, becareful not to let the 'this' reference escape!
 	protected int resolvePort(RedisServer redisServer) {
 		return getFirst(assertRedisServer(redisServer).ports());
 	}
@@ -122,5 +146,9 @@ public class EmbeddedRedisServerConnectionFactory implements RedisConnectionFact
 	@Override
 	public DataAccessException translateExceptionIfPossible(RuntimeException e) {
 		return getRedisConnectionFactory().translateExceptionIfPossible(e);
+	}
+
+	enum RedisClient {
+		JEDIS, LETTUCE
 	}
 }
