@@ -1,0 +1,86 @@
+= Embedded Redis Server Example with Spring Boot
+
+This repository contains an example of using Spring Boot to configure and bootstrap an embedded Redis server
+using the https://github.com/kstyrc/embedded-redis[embedded-redis] project on application startup
+or during the execution of an integration test.
+
+The common, reusable bits of this project enable the embedded Redis server to be configured and bootstrapped
+outside of a Spring Boot application, in a plain vanilla Spring application context.
+
+[[embedded-redis-server]]
+== Redis server
+
+In a plain Spring application, perhaps 1 using Spring Data Redis, you would configure the embedded Redis server using:
+
+[source, java]
+----
+@Configuration
+@EnableEmbeddedRedisServer
+class MyApplicationConfiguration {
+
+}
+----
+
+This will start a Redis server on a random, available port.
+
+You can explicitly set the port using:
+
+[source,java]
+----
+@Configuration
+@EnableEmbeddedRedisServer(port = 1234)
+class MyApplicationConfiguration {
+
+}
+----
+
+Alternatively, you can declare either the `redis.server.port` or `spring.data.redis.port` property
+in Spring Boot `application.properties`. The `spring.data.redis.port` property takes precedence if both are declared.
+
+For example:
+
+[source,properties]
+----
+# Spring Boot application.properties
+redis.sever.port=1234
+----
+
+You must have a local Redis distribution installed on your computer.
+
+You can configure the path to the Redis server executable (e.g. `redis-server`) using the property:
+
+[source,properties]
+----
+redis.server.exec=/path/to/redis-home/bin/redis-server
+----
+
+On macOS, `embedded-redis` looks for the `redis-server-2.8.19.app` (see https://github.com/kstyrc/embedded-redis/blob/embedded-redis-0.6/src/main/java/redis/embedded/RedisExecProvider.java#L26-L35[here]), which is not likely to be installed on your computer.
+
+It is possible that this Apple AppStore https://apps.apple.com/in/app/redis-server/id972359186?mt=12[Redis Server app]
+is what you need, but I am not entirely certain. I did not test the example with this app (yet).
+
+Otherwise, you can install the Redis server by following the https://redis.io/docs/latest/operate/oss_and_stack/install/install-redis/[instructions]
+on https://redis.io[Redis.io].
+
+[[redis-client]]
+== Redis client
+
+The framework bits use the Lettuce Redis client driver by default to create a Spring Data Redis, `RedisConnectionFactory`
+based on the configuration from the `embedded-redis` `RedisServer` instance.
+
+When using either Spring Boot auto-configuration or `@EnableEmbeddedRedisServer` configuration, you will be provided
+with a `RedisTemplate` connected to the embedded Redis server.
+
+[[notes]]
+== NOTES
+
+The https://github.com/kstyrc/embedded-redis[embedded-redis] is a misnomer because the project does not technically
+"embed" a running Redis server in your JVM application (e.g. Java or Kotlin) process. It simply forks a Redis server
+process.
+
+Fortunately, with the use of Spring and tying the Redis server lifecycle to the Spring application using Spring container
+lifecycle hooks (e.g. `SmartLifecycle` beans), the external Redis server functions like an embedded server, starting
+the Redis server when the application starts and stopping the server when the application shuts down.
+
+Still, I recommend users avoid this project and use the https://testcontainers.com/modules/redis/[Redis Testcontainer]
+instead. Spring Boot provides comprehensive https://docs.spring.io/spring-boot/reference/testing/testcontainers.html[support for Testcontainers].
