@@ -15,10 +15,17 @@
  */
 package io.codeprimate.examples.redis.embedded;
 
+import io.codeprimate.examples.redis.embedded.config.EmbeddedRedisServerAutoConfiguration;
+import io.codeprimate.examples.redis.embedded.config.EmbeddedRedisServerConfiguration;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 
-@SpringBootApplication
+@SpringBootApplication(exclude = { EmbeddedRedisServerAutoConfiguration.class })
+@ComponentScan(excludeFilters =
+	@ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = EmbeddedRedisServerConfiguration.class))
 @SuppressWarnings("unused")
 public class EmbeddedRedisExampleApplication {
 
